@@ -19,7 +19,7 @@ class _NewsPageState extends State<NewsPage> {
   final TextEditingController _localFilterController = TextEditingController();
   String _localKeyword = '';
 
-  final List<Map<String, String>> _categories = [
+final List<Map<String, String>> _categories = [
     {'label': 'Umum', 'value': 'general'},
     {'label': 'Bisnis', 'value': 'business'},
     {'label': 'Hiburan', 'value': 'entertainment'},
@@ -84,72 +84,125 @@ class _NewsPageState extends State<NewsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('News App'), centerTitle: true),
+      backgroundColor: Colors.grey[50],
+      appBar: AppBar(
+        title: const Text(
+          'Daily News',
+          style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 0.5),
+        ),
+        centerTitle: true,
+        elevation: 0,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black87,
+      ),
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: TextField(
-              controller: _searchController,
-              textInputAction: TextInputAction.search,
-              onSubmitted: (_) => _searchNews(),
-              decoration: InputDecoration(
-                hintText: 'Cari berita...',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: IconButton(
-                  icon: const Icon(Icons.arrow_forward),
-                  onPressed: _searchNews,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-          ),
-          SizedBox(
-            height: 56,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              children: _categories.map((category) {
-                final selected = _selectedCategory == category['value'];
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: ChoiceChip(
-                    label: Text(category['label']!),
-                    selected: selected,
-                    onSelected: (_) => _selectCategory(category['value']!),
+          // Search & Filter Section Container
+          Container(
+            color: Colors.white,
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+            child: Column(
+              children: [
+                // Global Search API
+                TextField(
+                  controller: _searchController,
+                  textInputAction: TextInputAction.search,
+                  onSubmitted: (_) => _searchNews(),
+                  decoration: InputDecoration(
+                    hintText: 'Cari berita di internet...',
+                    hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
+                    prefixIcon: Icon(Icons.search, color: Colors.grey[500]),
+                    filled: true,
+                    fillColor: Colors.grey[100],
+                    suffixIcon: IconButton(
+                      icon: const Icon(Icons.arrow_forward_rounded, size: 20),
+                      onPressed: _searchNews,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 0),
                   ),
-                );
-              }).toList(),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            child: TextField(
-              controller: _localFilterController,
-              decoration: InputDecoration(
-                labelText: 'Filter judul berita',
-                hintText: 'Contoh: AI, technology, sports',
-                prefixIcon: const Icon(Icons.filter_alt),
-                suffixIcon: IconButton(
-                  icon: const Icon(Icons.clear),
-                  onPressed: () {
-                    _localFilterController.clear();
+                ),
+                const SizedBox(height: 10),
+                // Local Filter Bar
+                TextField(
+                  controller: _localFilterController,
+                  decoration: InputDecoration(
+                    labelText: 'Filter judul di halaman ini',
+                    labelStyle: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                    hintText: 'Contoh: AI, Sport, dll',
+                    hintStyle: TextStyle(fontSize: 13, color: Colors.grey[400]),
+                    prefixIcon: Icon(Icons.filter_list_rounded, size: 20, color: Colors.grey[500]),
+                    isDense: true,
+                    filled: true,
+                    fillColor: Colors.grey[100],
+                    suffixIcon: _localKeyword.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear, size: 18),
+                            onPressed: () {
+                              _localFilterController.clear();
+                              setState(() {
+                                _localKeyword = '';
+                              });
+                            },
+                          )
+                        : null,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                  onChanged: (value) {
                     setState(() {
-                      _localKeyword = '';
+                      _localKeyword = value;
                     });
                   },
                 ),
-                border: const OutlineInputBorder(),
-              ),
-              onChanged: (value) {
-                setState(() {
-                  _localKeyword = value;
-                });
+              ],
+            ),
+          ),
+
+          // Categories Horizontal ListView
+          Container(
+            height: 50,
+            color: Colors.white,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              itemCount: _categories.length,
+              itemBuilder: (context, index) {
+                final category = _categories[index];
+                final selected = _selectedCategory == category['value'];
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+                  child: ChoiceChip(
+                    label: Text(category['label']!),
+                    selected: selected,
+                    selectedColor: Colors.indigo,
+                    backgroundColor: Colors.grey[100],
+                    labelStyle: TextStyle(
+                      color: selected ? Colors.white : Colors.black87,
+                      fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+                      fontSize: 13,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      side: BorderSide(
+                        color: selected ? Colors.indigo : Colors.transparent,
+                      ),
+                    ),
+                    onSelected: (_) => _selectCategory(category['value']!),
+                  ),
+                );
               },
             ),
           ),
+
+          const Divider(height: 1, thickness: 1, color: Colors.black12),
+
+          // Article List Section
           Expanded(
             child: FutureBuilder<List<Article>>(
               future: _newsFuture,
@@ -165,18 +218,25 @@ class _NewsPageState extends State<NewsPage> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.error_outline, size: 48),
+                          Icon(Icons.error_outline_rounded, size: 52, color: Colors.red[300]),
                           const SizedBox(height: 12),
-                          const Text('Gagal mengambil berita'),
+                          const Text('Gagal mengambil berita', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                           const SizedBox(height: 8),
                           Text(
                             '${snapshot.error}',
                             textAlign: TextAlign.center,
+                            style: TextStyle(color: Colors.grey[600], fontSize: 13),
                           ),
                           const SizedBox(height: 16),
-                          ElevatedButton(
+                          ElevatedButton.icon(
                             onPressed: _retryFetchingNews,
-                            child: const Text('Coba Lagi'),
+                            icon: const Icon(Icons.refresh),
+                            label: const Text('Coba Lagi'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.indigo,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            ),
                           ),
                         ],
                       ),
@@ -188,8 +248,15 @@ class _NewsPageState extends State<NewsPage> {
                 final filteredArticles = filterByTitle(articles, _localKeyword);
 
                 if (filteredArticles.isEmpty) {
-                  return const Center(
-                    child: Text('Tidak ada berita yang cocok.'),
+                  return Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.search_off_rounded, size: 48, color: Colors.grey[400]),
+                        const SizedBox(height: 12),
+                        Text('Tidak ada berita yang cocok.', style: TextStyle(color: Colors.grey[600], fontSize: 15)),
+                      ],
+                    ),
                   );
                 }
 
@@ -199,69 +266,104 @@ class _NewsPageState extends State<NewsPage> {
                   itemBuilder: (context, index) {
                     final article = filteredArticles[index];
 
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      clipBehavior: Clip.antiAlias,
-                      child: InkWell(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  ArticleDetailPage(article: article),
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 14),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.04),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ArticleDetailPage(article: article),
+                                ),
+                              );
+                            },
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (article.imageUrl.isNotEmpty)
+                                  Image.network(
+                                    article.imageUrl,
+                                    width: double.infinity,
+                                    height: 190,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Container(
+                                        height: 120,
+                                        color: Colors.grey[200],
+                                        child: Center(
+                                          child: Icon(Icons.broken_image_rounded, size: 36, color: Colors.grey[400]),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                Padding(
+                                  padding: const EdgeInsets.all(14),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      // Source Badge
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: Colors.indigo.withValues(alpha: 0.08),
+                                          borderRadius: BorderRadius.circular(6),
+                                        ),
+                                        child: Text(
+                                          article.sourceName.toUpperCase(),
+                                          style: const TextStyle(
+                                            color: Colors.indigo,
+                                            fontWeight: FontWeight.w700,
+                                            fontSize: 10,
+                                            letterSpacing: 0.5,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      // Title
+                                      Text(
+                                        article.title,
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.black87,
+                                          height: 1.3,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      // Description
+                                      Text(
+                                        article.description.isEmpty
+                                            ? 'Deskripsi tidak tersedia.'
+                                            : article.description,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: Colors.grey[600],
+                                          height: 1.4,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
-                          );
-                        },
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (article.imageUrl.isNotEmpty)
-                              Image.network(
-                                article.imageUrl,
-                                width: double.infinity,
-                                height: 200,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return const SizedBox(
-                                    height: 120,
-                                    child: Center(
-                                      child: Icon(Icons.broken_image, size: 40),
-                                    ),
-                                  );
-                                },
-                              ),
-                            Padding(
-                              padding: const EdgeInsets.all(12),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    article.sourceName,
-                                    style: const TextStyle(
-                                      color: Colors.blue,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    article.title,
-                                    style: const TextStyle(
-                                      fontSize: 17,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    article.description.isEmpty
-                                        ? 'Deskripsi tidak tersedia.'
-                                        : article.description,
-                                    maxLines: 3,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
                       ),
                     );
